@@ -15,11 +15,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\ProyectoDocucenter\\ProyectoDocucenter\\ProyectoDocucenter.csproj",
+      "projectUniqueName": "E:\\PROYECTOS\\Docucenter\\ProyectoDocucenter\\ProyectoDocucenter\\ProyectoDocucenter.csproj",
       "projectName": "ProyectoDocucenter",
-      "projectPath": "E:\\ProyectoDocucenter\\ProyectoDocucenter\\ProyectoDocucenter.csproj",
+      "projectPath": "E:\\PROYECTOS\\Docucenter\\ProyectoDocucenter\\ProyectoDocucenter\\ProyectoDocucenter.csproj",
       "packagesPath": "C:\\Users\\fabi4\\.nuget\\packages\\",
-      "outputPath": "E:\\ProyectoDocucenter\\ProyectoDocucenter\\obj\\",
+      "outputPath": "E:\\PROYECTOS\\Docucenter\\ProyectoDocucenter\\ProyectoDocucenter\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
