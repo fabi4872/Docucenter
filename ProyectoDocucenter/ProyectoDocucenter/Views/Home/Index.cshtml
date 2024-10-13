@@ -28,10 +28,31 @@
     .areaArchivo :hover {
         background: #F2FAFD;
     }
+    .modal-header{
+        background-color: #F9F9F9;
+    }
+    .table{
+        overflow: auto;
+        box-shadow: 0 .25rem .25rem 0 #CCC;
+        margin: 5rem 0;
+        table-layout: fixed;
+        width: 100%;
+    }
+    .button-icon{
+        border: none;
+        background: transparent;
+        margin: 0;
+        padding: 0;
+    }
+    td {
+        white-space: nowrap; /* Evita que el texto se ajuste en múltiples líneas */
+        overflow: hidden; /* Oculta el contenido que excede el ancho de la celda */
+        text-overflow: ellipsis; /* Muestra "..." si el contenido es demasiado largo */
+    }
 </style>
 
 <div class="text-center">
-    <h1 class="display-4 mb-4">Documentos</h1>
+    <h1 class="display-4 mb-5">Documentos</h1>
 
     <form asp-action="UploadPdf" method="post" enctype="multipart/form-data">
         <div class="areaArchivo">
@@ -44,7 +65,7 @@
                         <div>
                             <span aria-hidden="true" class="glyphicon glyphicon-cloud-upload"></span>
                         </div>
-                        <i style="font-size: 50px; color: #949494;" class="fa-regular fa-file-pdf mb-1"></i>
+                        <i style="font-size: 50px; color: #FF7272;" class="fa-regular fa-file-pdf mb-1"></i>
                         <div class="droptxt">Arrastre o seleccione archivos PDF</div>
                     </div>
                 </div>
@@ -61,6 +82,25 @@
         </div>
     </form>
 
+    <!-- Tabla -->
+    <table id="tableArchivos" class="table table-striped table-light" border="1">
+        <thead>
+            <tr>
+                <th scope="col">Código</th>
+                <th scope="col">Fecha Original</th>
+                <th scope="col">Hash Original</th>
+                <th scope="col">Fecha Firma</th>
+                <th scope="col">Hash Firma</th>
+                <th scope="col">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tableArchivosBody">
+            <tr>
+                <td colspan="6" class="text-center">No hay resultados disponibles</td>
+            </tr>
+        </tbody>
+    </table>
+
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -72,21 +112,24 @@
                 <div class="modal-body" id="modalBodyContent">
                    
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary">Confirmar</button>
+                <div class="modal-footer" id="modalFooter">
+                    
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        let itemActual = {};
+        let tableArchivosItems = [];
         const dropArea = document.getElementById('dropArea');
         const fileInput = document.getElementById('pdfFile');
         const fileNameSpan = document.getElementById('fileName');
         const uploadBtn = document.getElementById('uploadBtn');
         const modalBodyContent = document.getElementById('modalBodyContent');
+        const modalFooter = document.getElementById('modalFooter');
         const modalElement = document.getElementById('exampleModal');
+        const tableArchivosBody = document.getElementById('tableArchivosBody');
         const modal = new bootstrap.Modal(modalElement);
 
         // Vincular el clic en el área grande de arrastrar y soltar para abrir el selector de archivos
@@ -95,7 +138,7 @@
         });        
 
         // Capturar el cambio de selección de archivo
-        fileInput.addEventListener('change', function (event) {
+        fileInput.addEventListener('change', function () {
             const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado'; // Capturar el nombre del archivo
             fileNameSpan.textContent = fileName;  // Mostrar el nombre del archivo seleccionado
             uploadBtn.disabled = fileName === 'Ningún archivo seleccionado';  // Habilitar/deshabilitar el botón
@@ -124,17 +167,19 @@
             e.preventDefault();
             if (e.dataTransfer.files.length) {
                 fileInput.files = e.dataTransfer.files;  // Asignar los archivos arrastrados al input
-                const fileName = fileInput.files[0].name;  // Capturar el nombre del primer archivo arrastrado
+                const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado'; // Capturar el nombre del archivo
                 fileNameSpan.textContent = fileName;  // Mostrar el nombre del archivo
+                uploadBtn.disabled = fileName === 'Ningún archivo seleccionado';  // Habilitar/deshabilitar el botón
                 modalBodyContent.innerHTML = "";  // Limpiar body de modal
+                modalFooter.innerHTML = "";  // Limpiar footer de modal
                 modal.hide();  // Ocultar modal
             }
         });
 
         // Mostrar el PDF en el modal cuando se haga clic en el botón de "Subir PDF"
         uploadBtn.addEventListener('click', function () {
-            var formData = new FormData();
-            var pdfFile = fileInput.files[0];
+            let formData = new FormData();
+            let pdfFile = fileInput.files[0];
 
             if (!pdfFile) {
                 alert("Por favor, selecciona un archivo PDF.");
@@ -150,13 +195,36 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data) {
+                        // Limpiar y ocultar el modal
+                        modalBodyContent.innerHTML = "";  // Limpiar body de modal
+                        modalFooter.innerHTML = "";  // Limpiar footer de modal
+                        modal.hide();  // Ocultar modal
+
+                        // Guardar ítem actual
+                        let item = {
+                            code: data.code ? data.code : "No registra",
+                            dateOriginal: data.date ? data.date : "No registra",
+                            hashOriginal: data.hash ? data.hash : "No registra",
+                            pdfBase64Original: data.pdfBase64 ? data.pdfBase64 : "No registra",
+                            dateFirma: "No registra",
+                            hashFirma: "No registra",
+                            pdfBase64Firma: "No registra",
+                        };
+                        itemActual = item;
+
                         // Preparar body de modal
                         modalBodyContent.innerHTML = `
                         <div class="d-flex-column" id="areaDetalleArchivo">
-                            <p><strong>Hash:</strong> ${data.hash}</p>
+                            <p><strong>Código:</strong> ${data.code}</p>
                             <p><strong>Fecha:</strong> ${data.date}</p>
+                            <p><strong>Hash:</strong> ${data.hash}</p>
                             <iframe src="data:application/pdf;base64,${data.pdfBase64}" style="width: 100%; height: 600px;" frameborder="0"></iframe>
                         </div>`;
+
+                        // Preparar footer de modal
+                        modalFooter.innerHTML = `
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="insertItem();">Confirmar</button>`;
 
                         modal.show();  // Mostrar el modal
                     } else {
@@ -167,5 +235,93 @@
                     console.error('Error:', error);
                 });
         });
+    </script>
+
+    <script>
+        const insertItem = () => {
+            if (itemActual) {
+                const { code, dateOriginal, hashOriginal, dateFirma, hashFirma } = itemActual;
+
+                // Setear body de la tabla, si es necesario
+                if (tableArchivosItems.length === 0) {
+                    tableArchivosBody.innerHTML = "";
+                }
+
+                // Insertar ítem actual a la lista de ítems de la tabla
+                tableArchivosItems.push(itemActual);
+
+                // Preparar nueva row con ítem actual
+                const rowNew = `
+                    <tr>
+                        <td>
+                            ${code}
+                        </td>
+                        <td>
+                            ${dateOriginal}
+                        </td>
+                        <td>
+                            ${hashOriginal}
+                        </td>
+                        <td>
+                            ${dateFirma}
+                        </td>
+                        <td>
+                            ${hashFirma}
+                        </td>
+                        <td style="flex-wrap: wrap;">
+                            <div class="d-flex justify-content-center align-items-center" style="flex-wrap: wrap;">
+                                <button class="button-icon" onclick="verItem('${code}');">
+                                    <i class="fa-solid fa-eye" size="24" style="color: #0B5ED7;"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+
+                // Insertar nueva row al body de la tabla
+                tableArchivosBody.innerHTML += rowNew;
+
+                // Reset de ítem actual
+                itemActual = {};
+
+                // Limpiar y ocultar el modal
+                modalBodyContent.innerHTML = "";  // Limpiar body de modal
+                modalFooter.innerHTML = "";  // Limpiar footer de modal
+                modal.hide();  // Ocultar modal
+
+                fileNameSpan.textContent = 'Ningún archivo seleccionado';  // Mostrar el nombre del archivo
+                uploadBtn.disabled = true;  // Deshabilitar el botón
+
+                fileInput.value = "";  // Asegurar que se limpie el selector de archivos
+            }
+        };
+
+        const verItem = (code) => {
+            // Buscar ítem
+            const itemEncontrado = tableArchivosItems.find((i) => i.code === code);
+
+            if (itemEncontrado) {
+                const { code, dateOriginal, hashOriginal, pdfBase64Original } = itemEncontrado;
+
+                // Limpiar y ocultar el modal
+                modalBodyContent.innerHTML = "";  // Limpiar body de modal
+                modalFooter.innerHTML = "";  // Limpiar footer de modal
+                modal.hide();  // Ocultar modal
+
+                // Preparar body de modal
+                modalBodyContent.innerHTML = `
+                <div class="d-flex-column" id="areaDetalleArchivo">
+                    <p><strong>Código:</strong> ${code}</p>
+                    <p><strong>Fecha:</strong> ${dateOriginal}</p>
+                    <p><strong>Hash:</strong> ${hashOriginal}</p>
+                    <iframe src="data:application/pdf;base64,${pdfBase64Original}" style="width: 100%; height: 600px;" frameborder="0"></iframe>
+                </div>`;
+
+                // Preparar footer de modal
+                modalFooter.innerHTML = `
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>`;
+                
+                modal.show();  // Mostrar el modal
+            }
+        };
     </script>
 </div>

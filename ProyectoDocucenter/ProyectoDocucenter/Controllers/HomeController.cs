@@ -72,9 +72,10 @@ namespace DocucenterBFA.Controllers
                         return Json(new
                         {
                             success = true,
-                            pdfBase64 = pdfBase64,
-                            hash = hash,
-                            date = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                            code = Guid.NewGuid(),
+                            date = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                            hash,
+                            pdfBase64,
                         });
                     }
                 }
