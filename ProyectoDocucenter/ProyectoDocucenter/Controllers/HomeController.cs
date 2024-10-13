@@ -19,6 +19,36 @@ namespace DocucenterBFA.Controllers
             return View();
         }
 
+        //[HttpPost]
+        //public IActionResult UploadPdf(IFormFile pdfFile)
+        //{
+        //    if (pdfFile != null && pdfFile.Length > 0)
+        //    {
+        //        using (var memoryStream = new MemoryStream())
+        //        {
+        //            pdfFile.CopyTo(memoryStream);
+        //            var pdfBytes = memoryStream.ToArray();
+
+        //            // Convertir a base64
+        //            string pdfBase64 = Convert.ToBase64String(pdfBytes);
+
+        //            // Calcular el hash
+        //            using (var sha256 = SHA256.Create())
+        //            {
+        //                byte[] hashBytes = sha256.ComputeHash(pdfBytes);
+        //                string hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+
+        //                // Pasar datos a la vista
+        //                ViewBag.PdfBase64 = pdfBase64;
+        //                ViewBag.Hash = hash;
+        //                ViewBag.Date = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+        //            }
+        //        }
+        //    }
+
+        //    return View("Index");
+        //}
+
         [HttpPost]
         public IActionResult UploadPdf(IFormFile pdfFile)
         {
@@ -38,16 +68,21 @@ namespace DocucenterBFA.Controllers
                         byte[] hashBytes = sha256.ComputeHash(pdfBytes);
                         string hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
 
-                        // Pasar datos a la vista
-                        ViewBag.PdfBase64 = pdfBase64;
-                        ViewBag.Hash = hash;
-                        ViewBag.Date = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+                        // Retornar los datos como JSON
+                        return Json(new
+                        {
+                            success = true,
+                            pdfBase64 = pdfBase64,
+                            hash = hash,
+                            date = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                        });
                     }
                 }
             }
 
-            return View("Index");
+            return Json(new { success = false, message = "El archivo PDF no es válido." });
         }
+
 
         public IActionResult Privacy()
         {
