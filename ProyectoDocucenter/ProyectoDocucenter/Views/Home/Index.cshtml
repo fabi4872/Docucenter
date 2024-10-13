@@ -3,7 +3,6 @@
 }
 
 <style>
-    /* Estilos básicos para el área de arrastrar y soltar */
     .dropArea {
         border: 2px dashed #CCC;
         padding: 20px;
@@ -13,23 +12,19 @@
         height: 300px;
         border-radius: 1rem;
     }
-
         .dropArea.highlight {
             border-color: #007bff;
         }
-
     .glyphicon-cloud-upload {
         font-size: 50px;
         color: #007bff;
     }
-
     .droptxt {
         font-size: 1.2rem;
         margin-top: 10px;
         color: #949494;
         margin: 0;
     }
-
     .areaArchivo :hover {
         background: #F2FAFD;
     }
@@ -38,7 +33,6 @@
 <div class="text-center">
     <h1 class="display-4 mb-4">Documentos</h1>
 
-    <!-- Formulario para subir PDF -->
     <form asp-action="UploadPdf" method="post" enctype="multipart/form-data">
         <div class="areaArchivo">
             <!-- Área de arrastrar y soltar -->
@@ -77,23 +71,23 @@
     }
 
     <script>
-        // Vincula el clic en el área grande de arrastrar y soltar para abrir el selector de archivos
+        // Vincular el clic en el área grande de arrastrar y soltar para abrir el selector de archivos
         document.getElementById('dropArea').addEventListener('click', function () {
-            document.getElementById('pdfFile').click();  // Simula el clic en el input oculto
+            document.getElementById('pdfFile').click();  // Simular el clic en el input oculto
         });
 
         // Lógica de arrastrar y soltar
         const dropArea = document.getElementById('dropArea');
         const fileInput = document.getElementById('pdfFile');
 
-        // Captura el cambio de selección de archivo
+        // Capturar el cambio de selección de archivo
         fileInput.addEventListener('change', function (event) {
             const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado';
-            document.getElementById('fileName').textContent = fileName;  // Muestra el nombre del archivo seleccionado
+            document.getElementById('fileName').textContent = fileName;  // Mostrar el nombre del archivo seleccionado
             document.getElementById('areaDetalleArchivo').innerHTML = "";
         });
 
-        // Resalta el área cuando el archivo se arrastra por encima
+        // Resaltar el área cuando el archivo se arrastra por encima
         ['dragenter', 'dragover'].forEach(eventName => {
             dropArea.addEventListener(eventName, (e) => {
                 e.preventDefault();
@@ -101,7 +95,7 @@
             });
         });
 
-        // Quita el resaltado cuando el archivo deja el área
+        // Quitar el resaltado cuando el archivo deja el área
         ['dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, (e) => {
                 e.preventDefault();
@@ -109,14 +103,14 @@
             });
         });
 
-        // Maneja el drop
+        // Manejar el drop
         dropArea.addEventListener('drop', (e) => {
             e.preventDefault();
             if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;  // Asigna los archivos arrastrados al input
-                // Captura el nombre del archivo arrastrado
-                const fileName = fileInput.files[0].name;  // Captura el nombre del primer archivo arrastrado
-                document.getElementById('fileName').textContent = fileName;  // Muestra el nombre del archivo
+                fileInput.files = e.dataTransfer.files;  // Asignar los archivos arrastrados al input
+                // Capturar el nombre del archivo arrastrado
+                const fileName = fileInput.files[0].name;  // Capturar el nombre del primer archivo arrastrado
+                document.getElementById('fileName').textContent = fileName;  // Mostrar el nombre del archivo
                 document.getElementById('areaDetalleArchivo').innerHTML = "";
             }
         });
