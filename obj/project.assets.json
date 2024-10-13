@@ -15,11 +15,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\DocucenterBFA\\Docucenter\\DocucenterBFA\\DocucenterBFA.csproj",
+      "projectUniqueName": "F:\\PROYECTOS\\Docucenter\\DocucenterBFA.csproj",
       "projectName": "DocucenterBFA",
-      "projectPath": "E:\\DocucenterBFA\\Docucenter\\DocucenterBFA\\DocucenterBFA.csproj",
+      "projectPath": "F:\\PROYECTOS\\Docucenter\\DocucenterBFA.csproj",
       "packagesPath": "C:\\Users\\fabi4\\.nuget\\packages\\",
-      "outputPath": "E:\\DocucenterBFA\\Docucenter\\DocucenterBFA\\obj\\",
+      "outputPath": "F:\\PROYECTOS\\Docucenter\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
