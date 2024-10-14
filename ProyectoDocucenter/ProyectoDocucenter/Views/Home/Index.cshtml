@@ -83,7 +83,7 @@
 
         <!-- Botón de enviar (deshabilitado inicialmente) -->
         <div>
-            <button type="button" class="btn btn-warning mt-4" onclick="cerrarAlertDanger();">
+            <button type="button" class="btn btn-warning mt-4" onclick="limpiar();">
                 <i class="fa-solid fa-broom" style="margin-right: .25rem;"></i>
                 Limpiar
             </button>
@@ -389,7 +389,7 @@
             }
         };
 
-        const cerrarAlertDanger = () => {
+        const limpiar = () => {
             alertDanger.style.display = "none";
             alertDangerMensaje.innerHTML = "";
             fileNameSpan.textContent = 'Ningún archivo seleccionado';
