@@ -51,6 +51,11 @@
     }
 </style>
 
+<!-- Alerta Danger -->
+<div class="alert alert-danger alert-dismissible fade show mb-0 p-2 px-3" id="alertDanger" role="alert">
+    <i class="fa-solid fa-triangle-exclamation" style="margin-right: .5rem;"></i><span id="alertDangerMensaje"></span>
+</div>
+
 <div class="text-center">
     <h1 class="display-4 mb-5">Documentos</h1>
 
@@ -78,7 +83,14 @@
 
         <!-- Botón de enviar (deshabilitado inicialmente) -->
         <div>
-            <button type="button" id="uploadBtn" class="btn btn-primary mt-4" disabled>Subir PDF</button>
+            <button type="button" class="btn btn-warning mt-4" onclick="cerrarAlertDanger();">
+                <i class="fa-solid fa-broom" style="margin-right: .25rem;"></i>
+                Limpiar
+            </button>
+            <button type="button" id="uploadBtn" class="btn btn-primary mt-4" disabled>
+                <i class="fa-solid fa-upload" style="margin-right: .25rem;"></i>
+                Subir PDF
+            </button>
         </div>
     </form>
 
@@ -122,6 +134,8 @@
     <script>
         let itemActual = {};
         let tableArchivosItems = [];
+        const alertDanger = document.getElementById('alertDanger');
+        const alertDangerMensaje = document.getElementById('alertDangerMensaje');
         const dropArea = document.getElementById('dropArea');
         const fileInput = document.getElementById('pdfFile');
         const fileNameSpan = document.getElementById('fileName');
@@ -132,6 +146,10 @@
         const tableArchivosBody = document.getElementById('tableArchivosBody');
         const modal = new bootstrap.Modal(modalElement);
 
+        // Carga inicial
+        alertDanger.style.display = "none";
+        alertDangerMensaje.innerHTML = "";
+
         // Vincular el clic en el área grande de arrastrar y soltar para abrir el selector de archivos
         dropArea.addEventListener('click', function () {
             fileInput.click();  // Simular el clic en el input oculto
@@ -139,11 +157,22 @@
 
         // Capturar el cambio de selección de archivo
         fileInput.addEventListener('change', function () {
+            alertDanger.style.display = "none";
+            alertDangerMensaje.innerHTML = "";
+
             const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado'; // Capturar el nombre del archivo
             fileNameSpan.textContent = fileName;  // Mostrar el nombre del archivo seleccionado
             uploadBtn.disabled = fileName === 'Ningún archivo seleccionado';  // Habilitar/deshabilitar el botón
             modalBodyContent.innerHTML = "";  // Limpiar body de modal
             modal.hide();  // Ocultar modal
+
+            if (!fileName.includes(".pdf")) {
+                alertDangerMensaje.innerHTML = "El archivo seleccionado no tiene un formato PDF.";
+                alertDanger.style.display = "block";
+                fileNameSpan.textContent = 'Ningún archivo seleccionado';
+                fileInput.value = "";  // Asegurar que se limpie el selector de archivos
+                uploadBtn.disabled = true;  // Deshabilitar el botón
+            }
         });
 
         // Resaltar el área cuando el archivo se arrastra por encima
@@ -166,6 +195,9 @@
         dropArea.addEventListener('drop', (e) => {
             e.preventDefault();
             if (e.dataTransfer.files.length) {
+                alertDanger.style.display = "none";
+                alertDangerMensaje.innerHTML = "";
+
                 fileInput.files = e.dataTransfer.files;  // Asignar los archivos arrastrados al input
                 const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado'; // Capturar el nombre del archivo
                 fileNameSpan.textContent = fileName;  // Mostrar el nombre del archivo
@@ -173,16 +205,28 @@
                 modalBodyContent.innerHTML = "";  // Limpiar body de modal
                 modalFooter.innerHTML = "";  // Limpiar footer de modal
                 modal.hide();  // Ocultar modal
+
+                if (!fileName.includes(".pdf")) {
+                    alertDangerMensaje.innerHTML = "El archivo seleccionado no tiene un formato PDF.";
+                    alertDanger.style.display = "block";
+                    fileNameSpan.textContent = 'Ningún archivo seleccionado';
+                    fileInput.value = "";  // Asegurar que se limpie el selector de archivos
+                    uploadBtn.disabled = true;  // Deshabilitar el botón
+                }
             }
         });
 
         // Mostrar el PDF en el modal cuando se haga clic en el botón de "Subir PDF"
         uploadBtn.addEventListener('click', function () {
+            alertDanger.style.display = "none";
+            alertDangerMensaje.innerHTML = "";
+
             let formData = new FormData();
             let pdfFile = fileInput.files[0];
 
             if (!pdfFile) {
-                alert("Por favor, selecciona un archivo PDF.");
+                alertDangerMensaje.innerHTML = "Por favor, seleccione un archivo PDF.";
+                alertDanger.style.display = "block";
                 return;
             }
 
@@ -195,6 +239,17 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data) {
+                        // Verificar existencia de archivo en tabla
+                        const itemEncontrado = tableArchivosItems.find((i) => i.hashOriginal === data.hash);
+                        if (itemEncontrado) {
+                            alertDangerMensaje.innerHTML = "El archivo seleccionado ya existe.";
+                            alertDanger.style.display = "block";
+                            fileNameSpan.textContent = 'Ningún archivo seleccionado';
+                            fileInput.value = "";  // Asegurar que se limpie el selector de archivos
+                            uploadBtn.disabled = true;  // Deshabilitar el botón
+                            return;
+                        }
+
                         // Limpiar y ocultar el modal
                         modalBodyContent.innerHTML = "";  // Limpiar body de modal
                         modalFooter.innerHTML = "";  // Limpiar footer de modal
@@ -223,16 +278,24 @@
 
                         // Preparar footer de modal
                         modalFooter.innerHTML = `
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="insertItem();">Confirmar</button>`;
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fa-solid fa-xmark" style="margin-right: .25rem;"></i>
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="insertItem();">
+                            <i class="fa-solid fa-check" style="margin-right: .25rem;"></i>
+                            Confirmar
+                        </button>`;
 
                         modal.show();  // Mostrar el modal
                     } else {
-                        alert("Error al subir el PDF.");
+                        alertDangerMensaje.innerHTML = "Error al subir el archivo PDF.";
+                        alertDanger.style.display = "block";
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    alertDangerMensaje.innerHTML = `Error inesperado: ${error}`;
+                    alertDanger.style.display = "block";
                 });
         });
     </script>
@@ -290,7 +353,6 @@
 
                 fileNameSpan.textContent = 'Ningún archivo seleccionado';  // Mostrar el nombre del archivo
                 uploadBtn.disabled = true;  // Deshabilitar el botón
-
                 fileInput.value = "";  // Asegurar que se limpie el selector de archivos
             }
         };
@@ -318,10 +380,21 @@
 
                 // Preparar footer de modal
                 modalFooter.innerHTML = `
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>`;
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark" style="margin-right: .25rem;"></i>
+                    Cerrar
+                </button>`;
                 
                 modal.show();  // Mostrar el modal
             }
+        };
+
+        const cerrarAlertDanger = () => {
+            alertDanger.style.display = "none";
+            alertDangerMensaje.innerHTML = "";
+            fileNameSpan.textContent = 'Ningún archivo seleccionado';
+            fileInput.value = "";  // Asegurar que se limpie el selector de archivos
+            uploadBtn.disabled = true;  // Deshabilitar el botón
         };
     </script>
 </div>
