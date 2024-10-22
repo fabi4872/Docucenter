@@ -3,6 +3,11 @@
 }
 
 <style>
+    .contenido {
+        min-height: 100vh !important;
+        display: flex;
+        flex-direction: column;
+    }
     .dropArea {
         border: 2px dashed #CCC;
         padding: 20px;
@@ -49,6 +54,10 @@
         overflow: hidden; /* Oculta el contenido que excede el ancho de la celda */
         text-overflow: ellipsis; /* Muestra "..." si el contenido es demasiado largo */
     }
+    .consultas-bfa{
+        width: 100% !important;
+        margin-bottom: 10rem !important;
+    }
 </style>
 
 <!-- Alerta Danger -->
@@ -56,7 +65,7 @@
     <i class="fa-solid fa-triangle-exclamation" style="margin-right: .5rem;"></i><span id="alertDangerMensaje"></span>
 </div>
 
-<div class="text-center">
+<div class="text-center contenido">
     <h1 class="display-4 mb-5">Documentos</h1>
 
     <form asp-action="UploadPdf" method="post" enctype="multipart/form-data">
@@ -113,6 +122,31 @@
         </tbody>
     </table>
 
+    @*<div class="container consultas-bfa">
+        <div class="row">
+            <div class="col-12 col-sm-12 col-lg-6 d-flex justify-content-center align.items-center mt-2">
+                <form action="/Home/ConsultarHash" method="post">
+                    <label for="hashBase64">Hash (Base64):</label>
+                    <input type="text" name="hashBase64" required />
+                    <button type="submit" class="btn btn-secondary">Testear Hash</button>
+                </form>
+            </div>
+
+            <div class="col-12 col-sm-12 col-lg-6 d-flex justify-content-center align.items-center mt-2">
+                <form action="/Home/GuardarHash" method="post">
+                    <label for="hashBase64">Hash (Base64):</label>
+                    <input type="text" name="hashBase64" required />
+                    <button type="submit" class="btn btn-secondary">Guardar Hash</button>
+                </form>
+            </div>
+        </div>
+
+        @if (ViewBag.HashCount != null)
+        {
+            <div>El hash ha sido encontrado @ViewBag.HashCount veces.</div>
+        }
+    </div>*@
+
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -160,13 +194,14 @@
             alertDanger.style.display = "none";
             alertDangerMensaje.innerHTML = "";
 
+            const file = fileInput.files[0]; // Obtener el archivo arrastrado
             const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado'; // Capturar el nombre del archivo
             fileNameSpan.textContent = fileName;  // Mostrar el nombre del archivo seleccionado
             uploadBtn.disabled = fileName === 'Ningún archivo seleccionado';  // Habilitar/deshabilitar el botón
             modalBodyContent.innerHTML = "";  // Limpiar body de modal
             modal.hide();  // Ocultar modal
 
-            if (!fileName.includes(".pdf")) {
+            if (file.type !== "application/pdf") {
                 alertDangerMensaje.innerHTML = "El archivo seleccionado no tiene un formato PDF.";
                 alertDanger.style.display = "block";
                 fileNameSpan.textContent = 'Ningún archivo seleccionado';
@@ -199,14 +234,15 @@
                 alertDangerMensaje.innerHTML = "";
 
                 fileInput.files = e.dataTransfer.files;  // Asignar los archivos arrastrados al input
+                const file = fileInput.files[0]; // Obtener el archivo arrastrado
                 const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'Ningún archivo seleccionado'; // Capturar el nombre del archivo
                 fileNameSpan.textContent = fileName;  // Mostrar el nombre del archivo
                 uploadBtn.disabled = fileName === 'Ningún archivo seleccionado';  // Habilitar/deshabilitar el botón
                 modalBodyContent.innerHTML = "";  // Limpiar body de modal
                 modalFooter.innerHTML = "";  // Limpiar footer de modal
-                modal.hide();  // Ocultar modal
+                modal.hide();  // Ocultar modal               
 
-                if (!fileName.includes(".pdf")) {
+                if (file.type !== "application/pdf") {
                     alertDangerMensaje.innerHTML = "El archivo seleccionado no tiene un formato PDF.";
                     alertDanger.style.display = "block";
                     fileNameSpan.textContent = 'Ningún archivo seleccionado';
