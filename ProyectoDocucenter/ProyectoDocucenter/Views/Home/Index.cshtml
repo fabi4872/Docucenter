@@ -122,9 +122,15 @@
         </tbody>
     </table>
 
-    @*<div class="container consultas-bfa">
+    <div class="container consultas-bfa">
         <div class="row">
-            <div class="col-12 col-sm-12 col-lg-6 d-flex justify-content-center align.items-center mt-2">
+            <div class="col-12 col-sm-12 col-lg-4 d-flex justify-content-center align.items-center mt-2">
+                <form action="/BFA/DeployAndGetContract" method="get">
+                    <button type="submit" class="btn btn-secondary">Saludo</button>
+                </form>
+            </div>
+
+            <div class="col-12 col-sm-12 col-lg-4 d-flex justify-content-center align.items-center mt-2">
                 <form action="/Home/ConsultarHash" method="post">
                     <label for="hashBase64">Hash (Base64):</label>
                     <input type="text" name="hashBase64" required />
@@ -132,7 +138,7 @@
                 </form>
             </div>
 
-            <div class="col-12 col-sm-12 col-lg-6 d-flex justify-content-center align.items-center mt-2">
+            <div class="col-12 col-sm-12 col-lg-4 d-flex justify-content-center align.items-center mt-2">
                 <form action="/Home/GuardarHash" method="post">
                     <label for="hashBase64">Hash (Base64):</label>
                     <input type="text" name="hashBase64" required />
@@ -145,7 +151,7 @@
         {
             <div>El hash ha sido encontrado @ViewBag.HashCount veces.</div>
         }
-    </div>*@
+    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
