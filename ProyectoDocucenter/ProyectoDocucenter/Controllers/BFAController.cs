@@ -79,7 +79,7 @@ namespace DocucenterBFA.Controllers
                 var privateKey = "0x0692ca035d4cd4d4667f4bf5e7647f3aae414d14025290b0b2bc12a8ffd823c8";
                 var url = "HTTP://127.0.0.1:7545";
                 var chainId = 1337;
-                
+
                 var account = new Account(privateKey, chainId);
                 var web3 = new Web3(account, url);
 
@@ -131,30 +131,73 @@ namespace DocucenterBFA.Controllers
             try
             {
                 // ABI del contrato ya desplegado
-                var abi = @"[{""inputs"":[],""name"":""getSaludo"",""outputs"":[{""internalType"":""string"",""name"":"""",""type"":""string""}],""stateMutability"":""view"",""type"":""function""},{""inputs"":[],""name"":""saludo"",""outputs"":[{""internalType"":""string"",""name"":"""",""type"":""string""}],""stateMutability"":""view"",""type"":""function""},{""inputs"":[{""internalType"":""string"",""name"":""_newSaludo"",""type"":""string""}],""name"":""setSaludo"",""outputs"":[],""stateMutability"":""nonpayable"",""type"":""function""}]";
+                var abi = @"[
+    {
+      ""inputs"": [],
+      ""name"": ""saludo"",
+      ""outputs"": [
+        {
+          ""internalType"": ""string"",
+          ""name"": """",
+          ""type"": ""string""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [],
+      ""name"": ""getSaludo"",
+      ""outputs"": [
+        {
+          ""internalType"": ""string"",
+          ""name"": """",
+          ""type"": ""string""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""string"",
+          ""name"": ""_newSaludo"",
+          ""type"": ""string""
+        }
+      ],
+      ""name"": ""setSaludo"",
+      ""outputs"": [],
+      ""stateMutability"": ""nonpayable"",
+      ""type"": ""function""
+    }
+  ]";
 
                 // Clave privada de la cuenta
-                var privateKey = "0x7580e7fb49df1c861f0050fae31c2224c6aba908e116b8da44ee8cd927b990b0";
-                var chainId = 444444444500;
+                var privateKey = "0xf70193a2eb89e733087f195b1844ed6700a31f274fa0de4ad2bdfed66ed25f8a";
+                var chainId = 5777;
                 var account = new Account(privateKey, chainId);
-                var web3 = new Web3(account, "http://testchain.nethereum.com:8545");
+                var web3 = new Web3(account, "HTTP://127.0.0.1:7545");
 
                 // Activar transacciones de tipo legacy
                 web3.TransactionManager.UseLegacyAsDefault = true;
 
                 var blockNumber = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-                
+
 
                 // Dirección del contrato ya desplegado
-                var contractAddress = "0x06a2dabf7fec27d27f9283cb2de1cd328685510c"; // Reemplaza con la dirección de tu contrato
+                var contractAddress = "0x1fC1B8b0A810Ca11152411c71f9C3dB9213B962d"; // Reemplaza con la dirección de tu contrato
 
                 // Crear una instancia del contrato usando el ABI y la dirección del contrato desplegado
                 var contract = web3.Eth.GetContract(abi, contractAddress);
                 var code = await web3.Eth.GetCode.SendRequestAsync(contractAddress);
+                var saldo = await web3.Eth.GetBalance.SendRequestAsync(account.Address);
 
                 // Llamar a la función "getSaludo"
                 var getSaludoFunction = contract.GetFunction("getSaludo");
-                string saludo = await getSaludoFunction.CallAsync<string>();
+                var saludo = await getSaludoFunction.CallAsync<string>();
 
                 // Mostrar el saludo obtenido del contrato
                 ViewBag.Message = $"El saludo del contrato en la dirección {contractAddress} es: {saludo}";

@@ -135,3 +135,5 @@ C:\1. Archivos\PROYECTOS\Docucenter\ProyectoDocucenter\ProyectoDocucenter\obj\De
 C:\1. Archivos\PROYECTOS\Docucenter\ProyectoDocucenter\ProyectoDocucenter\obj\Debug\net6.0\ProyectoDocucenter.pdb
 C:\1. Archivos\PROYECTOS\Docucenter\ProyectoDocucenter\ProyectoDocucenter\obj\Debug\net6.0\ProyectoDocucenter.genruntimeconfig.cache
 C:\1. Archivos\PROYECTOS\Docucenter\ProyectoDocucenter\ProyectoDocucenter\obj\Debug\net6.0\ref\ProyectoDocucenter.dll
+E:\PROYECTOS\Docucenter\ProyectoDocucenter\ProyectoDocucenter\bin\Debug\net6.0\contracts\bin\Stamper-solc-output.json
+E:\PROYECTOS\Docucenter\ProyectoDocucenter\ProyectoDocucenter\bin\Debug\net6.0\contracts\bin\Stamper.json
