@@ -26,7 +26,7 @@
     }
     .droptxt {
         font-size: 1.2rem;
-        margin-top: 10px;
+        margin-top: 20px !important;
         color: #949494;
         margin: 0;
     }
@@ -39,7 +39,7 @@
     .table{
         overflow: auto;
         box-shadow: 0 .25rem .25rem 0 #CCC;
-        margin: 5rem 0;
+        margin: 5rem 0 8rem 0 !important;
         table-layout: fixed;
         width: 100%;
     }
@@ -92,7 +92,7 @@
 
         <!-- Botón de enviar (deshabilitado inicialmente) -->
         <div>
-            <button type="button" class="btn btn-warning mt-4 btn-lg mx-1" onclick="limpiar();" style="width: 10rem;">
+            <button type="button" class="btn btn-outline-primary mt-4 btn-lg mx-1" onclick="limpiar();" style="width: 10rem;">
                 <i class="fa-solid fa-broom" style="margin-right: .25rem;"></i>
                 Limpiar
             </button>
@@ -107,58 +107,24 @@
     <table id="tableArchivos" class="table table-striped table-light" border="1">
         <thead>
             <tr>
-                <th scope="col">Código</th>
-                <th scope="col">Fecha Original</th>
-                <th scope="col">Hash Original</th>
-                <th scope="col">Fecha Firma</th>
-                <th scope="col">Hash Firma</th>
+                <th scope="col">#</th>
+                <th scope="col">Hash</th>
                 <th scope="col">Acciones</th>
             </tr>
         </thead>
         <tbody id="tableArchivosBody">
             <tr>
-                <td colspan="6" class="text-center">No hay resultados disponibles</td>
+                <td colspan="3" class="text-center">No hay resultados disponibles</td>
             </tr>
         </tbody>
     </table>
-
-    <div class="container consultas-bfa">
-        <div class="row">
-            <div class="col-12 col-sm-12 col-lg-4 d-flex justify-content-center align.items-center mt-2">
-                <form action="/BFA/HolaMundoContract" method="get">
-                    <button type="submit" class="btn btn-secondary">Saludo</button>
-                </form>
-            </div>
-
-            <div class="col-12 col-sm-12 col-lg-4 d-flex justify-content-center align.items-center mt-2">
-                <form action="/Home/ConsultarHash" method="post">
-                    <label for="hashBase64">Hash (Base64):</label>
-                    <input type="text" name="hashBase64" required />
-                    <button type="submit" class="btn btn-secondary">Testear Hash</button>
-                </form>
-            </div>
-
-            <div class="col-12 col-sm-12 col-lg-4 d-flex justify-content-center align.items-center mt-2">
-                <form action="/Home/GuardarHash" method="post">
-                    <label for="hashBase64">Hash (Base64):</label>
-                    <input type="text" name="hashBase64" required />
-                    <button type="submit" class="btn btn-secondary">Guardar Hash</button>
-                </form>
-            </div>
-        </div>
-
-        @if (ViewBag.HashCount != null)
-        {
-            <div>El hash ha sido encontrado @ViewBag.HashCount veces.</div>
-        }
-    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Detalle de Archivo</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Detalle</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="modalBodyContent">
@@ -172,8 +138,6 @@
     </div>
 
     <script>
-        let itemActual = {};
-        let tableArchivosItems = [];
         const alertDanger = document.getElementById('alertDanger');
         const alertDangerMensaje = document.getElementById('alertDangerMensaje');
         const dropArea = document.getElementById('dropArea');
@@ -185,6 +149,10 @@
         const modalElement = document.getElementById('exampleModal');
         const tableArchivosBody = document.getElementById('tableArchivosBody');
         const modal = new bootstrap.Modal(modalElement);
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            obtenerHashes();
+        });
 
         // Carga inicial
         alertDanger.style.display = "none";
@@ -213,6 +181,9 @@
                 fileNameSpan.textContent = 'Ningún archivo seleccionado';
                 fileInput.value = "";  // Asegurar que se limpie el selector de archivos
                 uploadBtn.disabled = true;  // Deshabilitar el botón
+
+                // Desplazar hacia la parte superior de la pantalla
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
 
@@ -254,6 +225,9 @@
                     fileNameSpan.textContent = 'Ningún archivo seleccionado';
                     fileInput.value = "";  // Asegurar que se limpie el selector de archivos
                     uploadBtn.disabled = true;  // Deshabilitar el botón
+
+                    // Desplazar hacia la parte superior de la pantalla
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
         });
@@ -269,6 +243,9 @@
             if (!pdfFile) {
                 alertDangerMensaje.innerHTML = "Por favor, seleccione un archivo PDF.";
                 alertDanger.style.display = "block";
+
+                // Desplazar hacia la parte superior de la pantalla
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
 
@@ -281,40 +258,15 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data) {
-                        // Verificar existencia de archivo en tabla
-                        const itemEncontrado = tableArchivosItems.find((i) => i.hashOriginal === data.hash);
-                        if (itemEncontrado) {
-                            alertDangerMensaje.innerHTML = "El archivo seleccionado ya existe.";
-                            alertDanger.style.display = "block";
-                            fileNameSpan.textContent = 'Ningún archivo seleccionado';
-                            fileInput.value = "";  // Asegurar que se limpie el selector de archivos
-                            uploadBtn.disabled = true;  // Deshabilitar el botón
-                            return;
-                        }
-
                         // Limpiar y ocultar el modal
                         modalBodyContent.innerHTML = "";  // Limpiar body de modal
                         modalFooter.innerHTML = "";  // Limpiar footer de modal
                         modal.hide();  // Ocultar modal
 
-                        // Guardar ítem actual
-                        let item = {
-                            code: data.code ? data.code : "No registra",
-                            dateOriginal: data.date ? data.date : "No registra",
-                            hashOriginal: data.hash ? data.hash : "No registra",
-                            pdfBase64Original: data.pdfBase64 ? data.pdfBase64 : "No registra",
-                            dateFirma: "No registra",
-                            hashFirma: "No registra",
-                            pdfBase64Firma: "No registra",
-                        };
-                        itemActual = item;
-
                         // Preparar body de modal
                         modalBodyContent.innerHTML = `
                         <div class="d-flex-column" id="areaDetalleArchivo">
-                            <p><strong>Código:</strong> ${data.code}</p>
-                            <p><strong>Fecha:</strong> ${data.date}</p>
-                            <p><strong>Hash:</strong> ${data.hash}</p>
+                            <p class="mt-2 mb-4"><strong>Hash:</strong> ${data.hash}</p>
                             <iframe src="data:application/pdf;base64,${data.pdfBase64}" style="width: 100%; height: 600px;" frameborder="0"></iframe>
                         </div>`;
 
@@ -324,119 +276,177 @@
                             <i class="fa-solid fa-xmark" style="margin-right: .25rem;"></i>
                             Cancelar
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="insertItem();">
+                        <button type="button" class="btn btn-primary" onclick="guardarHash('${data.hash}');">
                             <i class="fa-solid fa-check" style="margin-right: .25rem;"></i>
                             Confirmar
                         </button>`;
 
-                        modal.show();  // Mostrar el modal
+                        verTransaccion(data.hash, "insert");
                     } else {
                         alertDangerMensaje.innerHTML = "Error al subir el archivo PDF.";
                         alertDanger.style.display = "block";
+
+                        // Desplazar hacia la parte superior de la pantalla
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                 })
                 .catch(error => {
                     alertDangerMensaje.innerHTML = `Error inesperado: ${error}`;
                     alertDanger.style.display = "block";
+
+                    // Desplazar hacia la parte superior de la pantalla
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 });
         });
     </script>
 
     <script>
-        const insertItem = () => {
-            if (itemActual) {
-                const { code, dateOriginal, hashOriginal, dateFirma, hashFirma } = itemActual;
-
-                // Setear body de la tabla, si es necesario
-                if (tableArchivosItems.length === 0) {
-                    tableArchivosBody.innerHTML = "";
-                }
-
-                // Insertar ítem actual a la lista de ítems de la tabla
-                tableArchivosItems.push(itemActual);
-
-                // Preparar nueva row con ítem actual
-                const rowNew = `
-                    <tr>
-                        <td>
-                            ${code}
-                        </td>
-                        <td>
-                            ${dateOriginal}
-                        </td>
-                        <td>
-                            ${hashOriginal}
-                        </td>
-                        <td>
-                            ${dateFirma}
-                        </td>
-                        <td>
-                            ${hashFirma}
-                        </td>
-                        <td style="flex-wrap: wrap;">
-                            <div class="d-flex justify-content-center align-items-center" style="flex-wrap: wrap;">
-                                <button class="button-icon" onclick="verItem('${code}');">
-                                    <i class="fa-solid fa-eye" size="24" style="color: #0B5ED7;"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>`;
-
-                // Insertar nueva row al body de la tabla
-                tableArchivosBody.innerHTML += rowNew;
-
-                // Reset de ítem actual
-                itemActual = {};
-
-                // Limpiar y ocultar el modal
-                modalBodyContent.innerHTML = "";  // Limpiar body de modal
-                modalFooter.innerHTML = "";  // Limpiar footer de modal
-                modal.hide();  // Ocultar modal
-
-                fileNameSpan.textContent = 'Ningún archivo seleccionado';  // Mostrar el nombre del archivo
-                uploadBtn.disabled = true;  // Deshabilitar el botón
-                fileInput.value = "";  // Asegurar que se limpie el selector de archivos
-            }
-        };
-
-        const verItem = (code) => {
-            // Buscar ítem
-            const itemEncontrado = tableArchivosItems.find((i) => i.code === code);
-
-            if (itemEncontrado) {
-                const { code, dateOriginal, hashOriginal, pdfBase64Original } = itemEncontrado;
-
-                // Limpiar y ocultar el modal
-                modalBodyContent.innerHTML = "";  // Limpiar body de modal
-                modalFooter.innerHTML = "";  // Limpiar footer de modal
-                modal.hide();  // Ocultar modal
-
-                // Preparar body de modal
-                modalBodyContent.innerHTML = `
-                <div class="d-flex-column" id="areaDetalleArchivo">
-                    <p><strong>Código:</strong> ${code}</p>
-                    <p><strong>Fecha:</strong> ${dateOriginal}</p>
-                    <p><strong>Hash:</strong> ${hashOriginal}</p>
-                    <iframe src="data:application/pdf;base64,${pdfBase64Original}" style="width: 100%; height: 600px;" frameborder="0"></iframe>
-                </div>`;
-
-                // Preparar footer de modal
-                modalFooter.innerHTML = `
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-                    <i class="fa-solid fa-xmark" style="margin-right: .25rem;"></i>
-                    Cerrar
-                </button>`;
-                
-                modal.show();  // Mostrar el modal
-            }
-        };
-
         const limpiar = () => {
             alertDanger.style.display = "none";
             alertDangerMensaje.innerHTML = "";
             fileNameSpan.textContent = 'Ningún archivo seleccionado';
             fileInput.value = "";  // Asegurar que se limpie el selector de archivos
             uploadBtn.disabled = true;  // Deshabilitar el botón
+
+            // Desplazar hacia la parte superior de la pantalla
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const verTransaccion = (hash, origen) => {
+            fetch(`/BFA/GetHashData?hash=${hash}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.data) {
+                            const { hash: hashValue, fechaYHoraStamp, numeroBloque } = data.data;  // Extraer datos de `data.data`
+
+                            if (origen === "grid") {
+                                modal.hide();
+                                modalBodyContent.innerHTML = `
+                                        <div class="mt-3 mb-3 d-flex flex-column">
+                                            <span><strong>Hash:</strong> ${hashValue}</span>
+                                            <span class="mt-1 mb-1"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
+                                            <span><strong>Bloque:</strong> ${numeroBloque}</span>
+                                        </div>`;
+                                modalFooter.innerHTML = `
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fa-solid fa-xmark" style="margin-right: .25rem;"></i>
+                                            Cancelar
+                                        </button>`;
+                                modal.show();
+                            }
+                            if (origen === "insert") {
+                                modal.hide();
+
+                                alertDangerMensaje.innerHTML = `
+                                        <div>
+                                            <h5 class="mt-2 mb-2">El archivo se encuentra registrado en la BFA</h5>
+                                            <span><strong>Hash:</strong> ${hashValue}</span>
+                                            <span class="mt-1 mb-1 mx-2"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
+                                            <span><strong>Bloque:</strong> ${numeroBloque}</span>
+                                        </div>`;
+                                alertDanger.style.display = "block";
+
+                                // Desplazar hacia la parte superior de la pantalla
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        }
+                        else {
+                            if (origen === "insert") {
+                                modal.show();
+                            }
+                        }
+                    } else {
+                        // Mostrar mensaje de error si la transacción falla
+                        alertDangerMensaje.innerHTML = "Error al obtener los datos de la transacción.";
+                        alertDanger.style.display = "block";
+
+                        // Desplazar hacia la parte superior de la pantalla
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                })
+                .catch(error => {
+                    alertDangerMensaje.innerHTML = `Error inesperado: ${error}`;
+                    alertDanger.style.display = "block";
+
+                    // Desplazar hacia la parte superior de la pantalla
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+        };
+
+        const guardarHash = (hash) => {
+            fetch('/BFA/StoreHash', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ hash: hash })  // Enviar el hash como propiedad en un objeto JSON
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        obtenerHashes();
+                    } else {
+                        alertDangerMensaje.innerHTML = "Error al almacenar el hash.";
+                        alertDanger.style.display = "block";
+
+                        // Desplazar hacia la parte superior de la pantalla
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                })
+                .catch(error => {
+                    alertDangerMensaje.innerHTML = `Error inesperado: ${error}`;
+                    alertDanger.style.display = "block";
+
+                    // Desplazar hacia la parte superior de la pantalla
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+        };
+
+        const obtenerHashes = () => {
+            fetch('/BFA/GetHashes', {
+                method: 'GET',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        tableArchivosBody.innerHTML = "";  // Limpiar contenido anterior
+
+                        // Generar las filas de la tabla con los hashes
+                        data.data.forEach((hash, index) => {
+                            tableArchivosBody.innerHTML += `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${hash}</td>
+                                    <td style="flex-wrap: wrap;">
+                                        <div class="d-flex justify-content-center align-items-center" style="flex-wrap: wrap;">
+                                            <button class="button-icon" onclick="verTransaccion('${hash}', 'grid');">
+                                                <i class="fa-solid fa-eye" size="24" style="color: #0B5ED7;"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                        });
+                    } else {
+                        tableArchivosBody.innerHTML = `
+                            <tr>
+                                <td colspan="3" class="text-center">No hay resultados disponibles</td>
+                            </tr>`;
+                        modalHistorico.show();  // Mostrar el modal aunque esté vacío
+                    }
+                })
+                .catch(error => {
+                    alertDangerMensaje.innerHTML = `Error inesperado: ${error}`;
+                    alertDanger.style.display = "block";
+
+                    // Desplazar hacia la parte superior de la pantalla
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
         };
     </script>
 </div>

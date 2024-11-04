@@ -4,14 +4,261 @@ using Nethereum.Web3.Accounts;
 using System.Numerics;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Web3;
-using Nethereum.Hex.HexTypes;
-using System;
 
 namespace DocucenterBFA.Controllers
 {
     public class BFAController : Controller
     {
+        // Logger
         private readonly ILogger<BFAController> _logger;
+
+        // URL del nodo de prueba
+        private const string UrlNodoPrueba = "http://127.0.0.1:7545";
+
+        // Chain ID (Network ID) del nodo de prueba
+        private const int ChainID = 5777;
+
+        // Key privada (Signature)
+        private const string PrivateKey = "0x4dc681e132aaecb26a118729cea8c754b5e29faf25ca796cbf3d56a373775205";
+
+        // Dirección del contrato
+        private const string ContractAddress = "0x0071C2215a4DFE116611c6403335b363F0f663Cb";
+
+        // ABI del contrato
+        private const string ABI = @"[
+    {
+      ""inputs"": [],
+      ""stateMutability"": ""nonpayable"",
+      ""type"": ""constructor""
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""stamplist"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""object"",
+          ""type"": ""uint256""
+        },
+        {
+          ""internalType"": ""address"",
+          ""name"": ""stamper"",
+          ""type"": ""address""
+        },
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""blockno"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256[]"",
+          ""name"": ""objectlist"",
+          ""type"": ""uint256[]""
+        }
+      ],
+      ""name"": ""put"",
+      ""outputs"": [],
+      ""stateMutability"": ""nonpayable"",
+      ""type"": ""function""
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""pos"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""getStamplistPos"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        },
+        {
+          ""internalType"": ""address"",
+          ""name"": """",
+          ""type"": ""address""
+        },
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""object"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""getObjectCount"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""object"",
+          ""type"": ""uint256""
+        },
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""pos"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""getObjectPos"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""address"",
+          ""name"": ""stamper"",
+          ""type"": ""address""
+        }
+      ],
+      ""name"": ""getStamperCount"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""address"",
+          ""name"": ""stamper"",
+          ""type"": ""address""
+        },
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""pos"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""getStamperPos"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": """",
+          ""type"": ""uint256""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""h"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""checkHash"",
+      ""outputs"": [
+        {
+          ""internalType"": ""bool"",
+          ""name"": """",
+          ""type"": ""bool""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [
+        {
+          ""internalType"": ""uint256"",
+          ""name"": ""h"",
+          ""type"": ""uint256""
+        }
+      ],
+      ""name"": ""getHashData"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256[]"",
+          ""name"": """",
+          ""type"": ""uint256[]""
+        },
+        {
+          ""internalType"": ""address[]"",
+          ""name"": """",
+          ""type"": ""address[]""
+        },
+        {
+          ""internalType"": ""uint256[]"",
+          ""name"": """",
+          ""type"": ""uint256[]""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    },
+    {
+      ""inputs"": [],
+      ""name"": ""getAllHashes"",
+      ""outputs"": [
+        {
+          ""internalType"": ""uint256[]"",
+          ""name"": """",
+          ""type"": ""uint256[]""
+        }
+      ],
+      ""stateMutability"": ""view"",
+      ""type"": ""function"",
+      ""constant"": true
+    }
+]";
 
         public BFAController(ILogger<BFAController> logger)
         {
@@ -24,196 +271,148 @@ namespace DocucenterBFA.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> DeployAndGetContract()
+        public async Task<JsonResult> GetHashes()
         {
             try
             {
-                //DIRECCION DEL CONTRATO
-                //0x6850be85c8c264ef1562ebae547fd7086c281774
-                //0x06a2dabf7fec27d27f9283cb2de1cd328685510c
-
-                var abi = @"[
-	{
-		""inputs"": [],
-		""name"": ""getSaludo"",
-		""outputs"": [
-			{
-				""internalType"": ""string"",
-				""name"": """",
-				""type"": ""string""
-			}
-		],
-		""stateMutability"": ""view"",
-		""type"": ""function""
-	},
-	{
-		""inputs"": [],
-		""name"": ""saludo"",
-		""outputs"": [
-			{
-				""internalType"": ""string"",
-				""name"": """",
-				""type"": ""string""
-			}
-		],
-		""stateMutability"": ""view"",
-		""type"": ""function""
-	},
-	{
-		""inputs"": [
-			{
-				""internalType"": ""string"",
-				""name"": ""_newSaludo"",
-				""type"": ""string""
-			}
-		],
-		""name"": ""setSaludo"",
-		""outputs"": [],
-		""stateMutability"": ""nonpayable"",
-		""type"": ""function""
-	}
-]";
-                //var privateKey = "0x7580e7fb49df1c861f0050fae31c2224c6aba908e116b8da44ee8cd927b990b0";
-                //var url = "http://testchain.nethereum.com:8545";
-                //var chainId = 444444444500;
-                var privateKey = "0x0692ca035d4cd4d4667f4bf5e7647f3aae414d14025290b0b2bc12a8ffd823c8";
-                var url = "HTTP://127.0.0.1:7545";
-                var chainId = 1337;
-
-                var account = new Account(privateKey, chainId);
-                var web3 = new Web3(account, url);
+                var account = new Account(PrivateKey, ChainID);
+                var web3 = new Web3(account, UrlNodoPrueba);
 
                 // Activar transacciones de tipo legacy
                 web3.TransactionManager.UseLegacyAsDefault = true;
 
-                // Crear un mensaje de despliegue
-                var deploymentMessage = new StandardTokenDeployment
+                // Cargar el contrato en la dirección especificada
+                var contract = web3.Eth.GetContract(ABI, ContractAddress);
+
+                // Llamar a la función "getAllHashes" del contrato
+                var getAllHashesFunction = contract.GetFunction("getAllHashes");
+                var hashes = await getAllHashesFunction.CallAsync<List<BigInteger>>();
+
+                // Convertir cada BigInteger en una cadena hexadecimal
+                var hashStrings = hashes.Select(h => "0x" + h.ToString("X").ToLower()).ToList();
+
+                // Retornar la lista de hashes en formato JSON
+                return Json(new { success = true, data = hashStrings });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error al interactuar con el contrato: {ex.Message}" });
+            }
+        }
+
+        // Acción para almacenar un nuevo hash
+        [HttpPost]
+        public async Task<JsonResult> StoreHash([FromBody] HashInput input)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input.Hash))
                 {
-                    TotalSupply = 100000
-                };
-
-                var saldo = await web3.Eth.GetBalance.SendRequestAsync(account.Address);
-                var code = await web3.Eth.GetCode.SendRequestAsync("0xA7775A3b8FD543f01f4CDEeE371140eA78d25E25");
-
-                // Enviar la transacción de despliegue
-                var transactionHash = await web3.Eth.DeployContract.SendRequestAsync(deploymentMessage.ByteCode, account.Address, new HexBigInteger(6721975));
-
-                // Obtener el recibo de la transacción de despliegue
-                var receipt = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(transactionHash);
-
-                // Esperar hasta que la transacción sea minada
-                while (receipt == null)
-                {
-                    await Task.Delay(5000); // Esperar 5 segundos antes de reintentar
-                    receipt = await web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(transactionHash);
+                    return Json(new { success = false, message = "Hash no puede ser nulo o vacío." });
                 }
 
-                // Obtener la dirección del contrato desplegado
-                var contractAddress = receipt.ContractAddress;
+                var account = new Account(PrivateKey);
+                var web3 = new Web3(account, UrlNodoPrueba);
+                web3.TransactionManager.UseLegacyAsDefault = true;
 
-                // Crear una instancia del contrato usando el ABI y la dirección del contrato desplegado
-                var contract = web3.Eth.GetContract(abi, contractAddress);
+                var contract = web3.Eth.GetContract(ABI, ContractAddress);
+                var putFunction = contract.GetFunction("put");
 
-                // Mostrar la dirección del contrato
-                ViewBag.Message = $"Contrato desplegado exitosamente en la dirección: {contractAddress}";
+                // Convertir el hash en formato string a BigInteger
+                BigInteger hashValue = BigInteger.Parse(input.Hash, System.Globalization.NumberStyles.HexNumber);
+
+                // Crear una lista con el hash convertido
+                var objectList = new List<BigInteger> { hashValue };
+
+                var transactionHash = await putFunction.SendTransactionAsync(account.Address, new Nethereum.Hex.HexTypes.HexBigInteger(300000), null, objectList);
+
+                return Json(new { success = true, transactionHash });
             }
             catch (Exception ex)
             {
-                ViewBag.Message = $"Error al desplegar el contrato: {ex.Message}";
+                return Json(new { success = false, message = $"Error al almacenar el hash: {ex.Message}" });
             }
-
-            return View("Index");
         }
 
+        // Acción para consultar la información de un hash
         [HttpGet]
-        public async Task<ActionResult> HolaMundoContract()
+        public async Task<JsonResult> GetHashData([FromQuery] string hash)
         {
             try
             {
-                // ABI del contrato ya desplegado
-                var abi = @"[
-    {
-      ""inputs"": [],
-      ""name"": ""saludo"",
-      ""outputs"": [
-        {
-          ""internalType"": ""string"",
-          ""name"": """",
-          ""type"": ""string""
-        }
-      ],
-      ""stateMutability"": ""view"",
-      ""type"": ""function"",
-      ""constant"": true
-    },
-    {
-      ""inputs"": [],
-      ""name"": ""getSaludo"",
-      ""outputs"": [
-        {
-          ""internalType"": ""string"",
-          ""name"": """",
-          ""type"": ""string""
-        }
-      ],
-      ""stateMutability"": ""view"",
-      ""type"": ""function"",
-      ""constant"": true
-    },
-    {
-      ""inputs"": [
-        {
-          ""internalType"": ""string"",
-          ""name"": ""_newSaludo"",
-          ""type"": ""string""
-        }
-      ],
-      ""name"": ""setSaludo"",
-      ""outputs"": [],
-      ""stateMutability"": ""nonpayable"",
-      ""type"": ""function""
-    }
-  ]";
+                // Validar si el hash es nulo o vacío
+                if (string.IsNullOrEmpty(hash))
+                    return Json(new { success = false, message = "El hash proporcionado no es válido." });
 
-                // Clave privada de la cuenta
-                var privateKey = "0xf70193a2eb89e733087f195b1844ed6700a31f274fa0de4ad2bdfed66ed25f8a";
-                var chainId = 5777;
-                var account = new Account(privateKey, chainId);
-                var web3 = new Web3(account, "HTTP://127.0.0.1:7545");
+                // Eliminar el prefijo '0x' si está presente y convertir a minúsculas
+                if (hash.StartsWith("0x"))
+                    hash = hash.Substring(2);
 
-                // Activar transacciones de tipo legacy
+                hash = hash.ToLower();
+
+                // Convertir el hash de cadena hexadecimal a BigInteger
+                BigInteger hashValue = BigInteger.Parse(hash, System.Globalization.NumberStyles.HexNumber);
+
+                var account = new Account(PrivateKey, ChainID);
+                var web3 = new Web3(account, UrlNodoPrueba);
                 web3.TransactionManager.UseLegacyAsDefault = true;
 
-                var blockNumber = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
+                var contract = web3.Eth.GetContract(ABI, ContractAddress);
+                var getHashDataFunction = contract.GetFunction("getHashData");
 
+                // Llamar a la función "getHashData" para obtener los detalles del hash
+                var result = await getHashDataFunction.CallDeserializingToObjectAsync<HashDataDto>(hashValue);
 
-                // Dirección del contrato ya desplegado
-                var contractAddress = "0x1fC1B8b0A810Ca11152411c71f9C3dB9213B962d"; // Reemplaza con la dirección de tu contrato
+                // Verificar si BlockNumbers es nulo o está vacío
+                if (result.BlockNumbers == null || result.BlockNumbers.Count == 0)
+                {
+                    // Devolver success como true pero data como null
+                    return Json(new { success = true, data = (object)null });
+                }
 
-                // Crear una instancia del contrato usando el ABI y la dirección del contrato desplegado
-                var contract = web3.Eth.GetContract(abi, contractAddress);
-                var code = await web3.Eth.GetCode.SendRequestAsync(contractAddress);
-                var saldo = await web3.Eth.GetBalance.SendRequestAsync(account.Address);
+                // Extraer el número de bloque (usamos el primer elemento)
+                BigInteger blockNumber = result.BlockNumbers[0];
+                var block = await web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(new Nethereum.Hex.HexTypes.HexBigInteger(blockNumber));
 
-                // Llamar a la función "getSaludo"
-                var getSaludoFunction = contract.GetFunction("getSaludo");
-                var saludo = await getSaludoFunction.CallAsync<string>();
+                // Convertir la marca de tiempo a una fecha y hora en formato dd/MM/yyyy HH:mm:ss
+                DateTimeOffset timeStamp = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value);
+                DateTime argentinaTime = timeStamp.ToOffset(TimeSpan.FromHours(-3)).DateTime;
+                string formattedTimeStamp = argentinaTime.ToString("dd/MM/yyyy HH:mm:ss");
 
-                // Mostrar el saludo obtenido del contrato
-                ViewBag.Message = $"El saludo del contrato en la dirección {contractAddress} es: {saludo}";
+                // Crear el objeto de resultado con el formato requerido
+                var responseData = new
+                {
+                    numeroBloque = blockNumber.ToString(),
+                    fechaYHoraStamp = formattedTimeStamp,
+                    hash = "0x" + hash  // Asegurarse de incluir el prefijo hexadecimal
+                };
+
+                return Json(new { success = true, data = responseData });
             }
             catch (Exception ex)
             {
-                ViewBag.Message = $"Error al interactuar con el contrato: {ex.Message}";
+                return Json(new { success = false, message = $"Error al consultar el hash: {ex.Message}" });
             }
+        }
 
-            return View("Index");
+        // DTO para mapear la respuesta de la función getHashData
+        [FunctionOutput]
+        public class HashDataDto
+        {
+            [Parameter("uint256[]", "objects", 1)]
+            public List<BigInteger>? Objects { get; set; }
+
+            [Parameter("address[]", "stampers", 2)]
+            public List<string>? Stampers { get; set; }
+
+            [Parameter("uint256[]", "blocknos", 3)]
+            public List<BigInteger>? BlockNumbers { get; set; }
         }
     }
 
     public class StandardTokenDeployment : ContractDeploymentMessage
     {
-        public static string BYTECODE = "0x60806040526040518060400160405280600a81526020017f486f6c61204d756e646f000000000000000000000000000000000000000000008152505f90816100479190610293565b50348015610053575f80fd5b50610362565b5f81519050919050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b7f4e487b71000000000000000000000000000000000000000000000000000000005f52602260045260245ffd5b5f60028204905060018216806100d457607f821691505b6020821081036100e7576100e6610090565b5b50919050565b5f819050815f5260205f209050919050565b5f6020601f8301049050919050565b5f82821b905092915050565b5f600883026101497fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8261010e565b610153868361010e565b95508019841693508086168417925050509392505050565b5f819050919050565b5f819050919050565b5f61019761019261018d8461016b565b610174565b61016b565b9050919050565b5f819050919050565b6101b08361017d565b6101c46101bc8261019e565b84845461011a565b825550505050565b5f90565b6101d86101cc565b6101e38184846101a7565b505050565b5b81811015610206576101fb5f826101d0565b6001810190506101e9565b5050565b601f82111561024b5761021c816100ed565b610225846100ff565b81016020851015610234578190505b610248610240856100ff565b8301826101e8565b50505b505050565b5f82821c905092915050565b5f61026b5f1984600802610250565b1980831691505092915050565b5f610283838361025c565b9150826002028217905092915050565b61029c82610059565b67ffffffffffffffff8111156102b5576102b4610063565b5b6102bf82546100bd565b6102ca82828561020a565b5f60209050601f8311600181146102fb575f84156102e9578287015190505b6102f38582610278565b86555061035a565b601f198416610309866100ed565b5f5b828110156103305784890151825560018201915060208501945060208101905061030b565b8683101561034d5784890151610349601f89168261025c565b8355505b6001600288020188555050505b505050505050565b6106e38061036f5f395ff3fe608060405234801561000f575f80fd5b506004361061003f575f3560e01c80630a3a9d6314610043578063b703ec5914610061578063db0702611461007f575b5f80fd5b61004b61009b565b6040516100589190610237565b60405180910390f35b610069610126565b6040516100769190610237565b60405180910390f35b61009960048036038101906100949190610394565b6101b5565b005b5f80546100a790610408565b80601f01602080910402602001604051908101604052809291908181526020018280546100d390610408565b801561011e5780601f106100f55761010080835404028352916020019161011e565b820191905f5260205f20905b81548152906001019060200180831161010157829003601f168201915b505050505081565b60605f805461013490610408565b80601f016020809104026020016040519081016040528092919081815260200182805461016090610408565b80156101ab5780601f10610182576101008083540402835291602001916101ab565b820191905f5260205f20905b81548152906001019060200180831161018e57829003601f168201915b5050505050905090565b805f90816101c391906105de565b5050565b5f81519050919050565b5f82825260208201905092915050565b8281835e5f83830152505050565b5f601f19601f8301169050919050565b5f610209826101c7565b61021381856101d1565b93506102238185602086016101e1565b61022c816101ef565b840191505092915050565b5f6020820190508181035f83015261024f81846101ff565b905092915050565b5f604051905090565b5f80fd5b5f80fd5b5f80fd5b5f80fd5b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b6102a6826101ef565b810181811067ffffffffffffffff821117156102c5576102c4610270565b5b80604052505050565b5f6102d7610257565b90506102e3828261029d565b919050565b5f67ffffffffffffffff82111561030257610301610270565b5b61030b826101ef565b9050602081019050919050565b828183375f83830152505050565b5f610338610333846102e8565b6102ce565b9050828152602081018484840111156103545761035361026c565b5b61035f848285610318565b509392505050565b5f82601f83011261037b5761037a610268565b5b813561038b848260208601610326565b91505092915050565b5f602082840312156103a9576103a8610260565b5b5f82013567ffffffffffffffff8111156103c6576103c5610264565b5b6103d284828501610367565b91505092915050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52602260045260245ffd5b5f600282049050600182168061041f57607f821691505b602082108103610432576104316103db565b5b50919050565b5f819050815f5260205f209050919050565b5f6020601f8301049050919050565b5f82821b905092915050565b5f600883026104947fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff82610459565b61049e8683610459565b95508019841693508086168417925050509392505050565b5f819050919050565b5f819050919050565b5f6104e26104dd6104d8846104b6565b6104bf565b6104b6565b9050919050565b5f819050919050565b6104fb836104c8565b61050f610507826104e9565b848454610465565b825550505050565b5f90565b610523610517565b61052e8184846104f2565b505050565b5b81811015610551576105465f8261051b565b600181019050610534565b5050565b601f8211156105965761056781610438565b6105708461044a565b8101602085101561057f578190505b61059361058b8561044a565b830182610533565b50505b505050565b5f82821c905092915050565b5f6105b65f198460080261059b565b1980831691505092915050565b5f6105ce83836105a7565b9150826002028217905092915050565b6105e7826101c7565b67ffffffffffffffff811115610600576105ff610270565b5b61060a8254610408565b610615828285610555565b5f60209050601f831160018114610646575f8415610634578287015190505b61063e85826105c3565b8655506106a5565b601f19841661065486610438565b5f5b8281101561067b57848901518255600182019150602085019450602081019050610656565b868310156106985784890151610694601f8916826105a7565b8355505b6001600288020188555050505b50505050505056fea264697066735822122033aa2c9d5a8f0f4e00216fe0b378b5ab144e8980dbe96056c874a40eb132d7f464736f6c634300081a0033";
+        public static string BYTECODE = "0x608060405234801561001057600080fd5b5060006040518060600160405280600081526020013373ffffffffffffffffffffffffffffffffffffffff1681526020014381525090806001815401808255809150506001900390600052602060002090600302016000909190919091506000820151816000015560208201518160010160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555060408201518160020155505061103a806100da6000396000f3fe608060405234801561001057600080fd5b506004361061009e5760003560e01c80639d192428116100665780639d19242814610181578063a08d1a4f146101b3578063aceaf4a0146101e3578063c15ed49114610215578063fe99f742146102455761009e565b80630500d7d0146100a35780633d07f5c1146100d55780633d76b7a3146100f15780634d48061b146101215780637e56bd5914610151575b600080fd5b6100bd60048036038101906100b891906109c0565b610263565b6040516100cc93929190610a3d565b60405180910390f35b6100ef60048036038101906100ea9190610bcd565b6102bd565b005b61010b600480360381019061010691906109c0565b610476565b6040516101189190610c31565b60405180910390f35b61013b600480360381019061013691906109c0565b610498565b6040516101489190610c4c565b60405180910390f35b61016b60048036038101906101669190610c67565b6104b8565b6040516101789190610c4c565b60405180910390f35b61019b600480360381019061019691906109c0565b6104f2565b6040516101aa93929190610a3d565b60405180910390f35b6101cd60048036038101906101c89190610cd3565b610595565b6040516101da9190610c4c565b60405180910390f35b6101fd60048036038101906101f891906109c0565b6105fb565b60405161020c93929190610e8f565b60405180910390f35b61022f600480360381019061022a9190610edb565b61084a565b60405161023c9190610c4c565b60405180910390f35b61024d610896565b60405161025a9190610f08565b60405180910390f35b6000818154811061027357600080fd5b90600052602060002090600302016000915090508060000154908060010160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16908060020154905083565b60008151905060005b818110156104715760008382815181106102e3576102e2610f2a565b5b60200260200101519050600060405180606001604052808381526020013373ffffffffffffffffffffffffffffffffffffffff1681526020014381525090806001815401808255809150506001900390600052602060002090600302016000909190919091506000820151816000015560208201518160010160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550604082015181600201555050600060016000805490506103ba9190610f88565b905060016000838152602001908152602001600020819080600181540180825580915050600190039060005260206000200160009091909190915055600260003373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020016000208190806001815401808255809150506001900390600052602060002001600090919091909150555050808061046990610fbc565b9150506102c6565b505050565b6000806001600084815260200190815260200160002080549050119050919050565b600060016000838152602001908152602001600020805490509050919050565b60006001600084815260200190815260200160002082815481106104df576104de610f2a565b5b9060005260206000200154905092915050565b600080600080848154811061050a57610509610f2a565b5b906000526020600020906003020160000154600085815481106105305761052f610f2a565b5b906000526020600020906003020160010160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff166000868154811061057657610575610f2a565b5b9060005260206000209060030201600201549250925092509193909250565b6000600260008473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002082815481106105e8576105e7610f2a565b5b9060005260206000200154905092915050565b606080606060006001600086815260200190815260200160002080549050905060008167ffffffffffffffff81111561063757610636610a8a565b5b6040519080825280602002602001820160405280156106655781602001602082028036833780820191505090505b50905060008267ffffffffffffffff81111561068457610683610a8a565b5b6040519080825280602002602001820160405280156106b25781602001602082028036833780820191505090505b50905060008367ffffffffffffffff8111156106d1576106d0610a8a565b5b6040519080825280602002602001820160405280156106ff5781602001602082028036833780820191505090505b50905060005b84811015610835576000600160008b8152602001908152602001600020828154811061073457610733610f2a565b5b90600052602060002001549050600080828154811061075657610755610f2a565b5b90600052602060002090600302019050806000015486848151811061077e5761077d610f2a565b5b6020026020010181815250508060010160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff168584815181106107c2576107c1610f2a565b5b602002602001019073ffffffffffffffffffffffffffffffffffffffff16908173ffffffffffffffffffffffffffffffffffffffff1681525050806002015484848151811061081457610813610f2a565b5b6020026020010181815250505050808061082d90610fbc565b915050610705565b50828282965096509650505050509193909250565b6000600260008373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020805490509050919050565b6060600060016000805490506108ac9190610f88565b905060008167ffffffffffffffff8111156108ca576108c9610a8a565b5b6040519080825280602002602001820160405280156108f85781602001602082028036833780820191505090505b5090506000600190505b82811161096d576000818154811061091d5761091c610f2a565b5b9060005260206000209060030201600001548260018361093d9190610f88565b8151811061094e5761094d610f2a565b5b602002602001018181525050808061096590610fbc565b915050610902565b50809250505090565b6000604051905090565b600080fd5b600080fd5b6000819050919050565b61099d8161098a565b81146109a857600080fd5b50565b6000813590506109ba81610994565b92915050565b6000602082840312156109d6576109d5610980565b5b60006109e4848285016109ab565b91505092915050565b6109f68161098a565b82525050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b6000610a27826109fc565b9050919050565b610a3781610a1c565b82525050565b6000606082019050610a5260008301866109ed565b610a5f6020830185610a2e565b610a6c60408301846109ed565b949350505050565b600080fd5b6000601f19601f8301169050919050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b610ac282610a79565b810181811067ffffffffffffffff82111715610ae157610ae0610a8a565b5b80604052505050565b6000610af4610976565b9050610b008282610ab9565b919050565b600067ffffffffffffffff821115610b2057610b1f610a8a565b5b602082029050602081019050919050565b600080fd5b6000610b49610b4484610b05565b610aea565b90508083825260208201905060208402830185811115610b6c57610b6b610b31565b5b835b81811015610b955780610b8188826109ab565b845260208401935050602081019050610b6e565b5050509392505050565b600082601f830112610bb457610bb3610a74565b5b8135610bc4848260208601610b36565b91505092915050565b600060208284031215610be357610be2610980565b5b600082013567ffffffffffffffff811115610c0157610c00610985565b5b610c0d84828501610b9f565b91505092915050565b60008115159050919050565b610c2b81610c16565b82525050565b6000602082019050610c466000830184610c22565b92915050565b6000602082019050610c6160008301846109ed565b92915050565b60008060408385031215610c7e57610c7d610980565b5b6000610c8c858286016109ab565b9250506020610c9d858286016109ab565b9150509250929050565b610cb081610a1c565b8114610cbb57600080fd5b50565b600081359050610ccd81610ca7565b92915050565b60008060408385031215610cea57610ce9610980565b5b6000610cf885828601610cbe565b9250506020610d09858286016109ab565b9150509250929050565b600081519050919050565b600082825260208201905092915050565b6000819050602082019050919050565b610d488161098a565b82525050565b6000610d5a8383610d3f565b60208301905092915050565b6000602082019050919050565b6000610d7e82610d13565b610d888185610d1e565b9350610d9383610d2f565b8060005b83811015610dc4578151610dab8882610d4e565b9750610db683610d66565b925050600181019050610d97565b5085935050505092915050565b600081519050919050565b600082825260208201905092915050565b6000819050602082019050919050565b610e0681610a1c565b82525050565b6000610e188383610dfd565b60208301905092915050565b6000602082019050919050565b6000610e3c82610dd1565b610e468185610ddc565b9350610e5183610ded565b8060005b83811015610e82578151610e698882610e0c565b9750610e7483610e24565b925050600181019050610e55565b5085935050505092915050565b60006060820190508181036000830152610ea98186610d73565b90508181036020830152610ebd8185610e31565b90508181036040830152610ed18184610d73565b9050949350505050565b600060208284031215610ef157610ef0610980565b5b6000610eff84828501610cbe565b91505092915050565b60006020820190508181036000830152610f228184610d73565b905092915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052603260045260246000fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052601160045260246000fd5b6000610f938261098a565b9150610f9e8361098a565b9250828203905081811115610fb657610fb5610f59565b5b92915050565b6000610fc78261098a565b91507fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8203610ff957610ff8610f59565b5b60018201905091905056fea2646970667358221220264cbb811b45754080ac56f121f7c6ce5de7c5a2fb557e9936df607d3ffe039c64736f6c63430008130033";
 
         public StandardTokenDeployment() : base(BYTECODE)
         {
@@ -221,5 +420,10 @@ namespace DocucenterBFA.Controllers
 
         [Parameter("uint256", "totalSupply")]
         public BigInteger TotalSupply { get; set; }
+    }
+
+    public class HashInput
+    {
+        public string Hash { get; set; }
     }
 }
