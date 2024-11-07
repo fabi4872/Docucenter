@@ -1,15 +1,25 @@
+using Microsoft.EntityFrameworkCore;
+using ProyectoDocucenter.ModelsDB;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configuración de la cadena de conexión
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Agrega el contexto de base de datos utilizando la cadena de conexión
+builder.Services.AddDbContext<BFAContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// Agregar servicios adicionales al contenedor
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configuración del pipeline de solicitudes HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // El valor predeterminado de HSTS es 30 días. Se puede ajustar para producción
     app.UseHsts();
 }
 
@@ -20,6 +30,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
+// Configuración de las rutas
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

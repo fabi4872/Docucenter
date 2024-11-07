@@ -4,11 +4,21 @@ using Nethereum.Web3.Accounts;
 using System.Numerics;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Web3;
+using ProyectoDocucenter.ModelsDB;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Microsoft.EntityFrameworkCore;
+using Nethereum.Hex.HexConvertors.Extensions;
+using System.Text;
+using System.Security.Cryptography;
+using System.Security.Policy;
 
 namespace DocucenterBFA.Controllers
 {
     public class BFAController : Controller
     {
+        // DB
+        private readonly BFAContext _context;
+
         // Logger
         private readonly ILogger<BFAController> _logger;
 
@@ -260,9 +270,10 @@ namespace DocucenterBFA.Controllers
     }
 ]";
 
-        public BFAController(ILogger<BFAController> logger)
+        public BFAController(ILogger<BFAController> logger, BFAContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
@@ -318,13 +329,17 @@ namespace DocucenterBFA.Controllers
                 var contract = web3.Eth.GetContract(ABI, ContractAddress);
                 var putFunction = contract.GetFunction("put");
 
-                // Convertir el hash en formato string a BigInteger
-                BigInteger hashValue = BigInteger.Parse(input.Hash, System.Globalization.NumberStyles.HexNumber);
+                // Convertir el hash a BigInteger sin signo usando HexToBigInteger
+                BigInteger hashValue = input.Hash.HexToBigInteger(false);
 
                 // Crear una lista con el hash convertido
                 var objectList = new List<BigInteger> { hashValue };
 
                 var transactionHash = await putFunction.SendTransactionAsync(account.Address, new Nethereum.Hex.HexTypes.HexBigInteger(300000), null, objectList);
+
+                // Guardar en base de datos
+                if (transactionHash != null)
+                    await this.GuardarTransaccionEnDB(input.Base64, "0x" + input.Hash);
 
                 return Json(new { success = true, transactionHash });
             }
@@ -344,14 +359,13 @@ namespace DocucenterBFA.Controllers
                 if (string.IsNullOrEmpty(hash))
                     return Json(new { success = false, message = "El hash proporcionado no es válido." });
 
-                // Eliminar el prefijo '0x' si está presente y convertir a minúsculas
-                if (hash.StartsWith("0x"))
-                    hash = hash.Substring(2);
-
+                // Asegurarse de que el hash tenga el prefijo '0x' y esté en minúsculas
+                if (!hash.StartsWith("0x"))
+                    hash = "0x" + hash;
                 hash = hash.ToLower();
 
-                // Convertir el hash de cadena hexadecimal a BigInteger
-                BigInteger hashValue = BigInteger.Parse(hash, System.Globalization.NumberStyles.HexNumber);
+                // Convertir el hash a BigInteger sin signo usando HexToBigInteger
+                BigInteger hashValue = hash.HexToBigInteger(false);
 
                 var account = new Account(PrivateKey, ChainID);
                 var web3 = new Web3(account, UrlNodoPrueba);
@@ -380,11 +394,13 @@ namespace DocucenterBFA.Controllers
                 string formattedTimeStamp = argentinaTime.ToString("dd/MM/yyyy HH:mm:ss");
 
                 // Crear el objeto de resultado con el formato requerido
+                Transaccion tr = await this.ObtenerTransaccionEnDB(hash);
                 var responseData = new
                 {
                     numeroBloque = blockNumber.ToString(),
                     fechaYHoraStamp = formattedTimeStamp,
-                    hash = "0x" + hash  // Asegurarse de incluir el prefijo hexadecimal
+                    hash = hash,  // Asegurarse de incluir el prefijo hexadecimal
+                    base64 = tr != null ? tr.Base64 : null
                 };
 
                 return Json(new { success = true, data = responseData });
@@ -408,6 +424,40 @@ namespace DocucenterBFA.Controllers
             [Parameter("uint256[]", "blocknos", 3)]
             public List<BigInteger>? BlockNumbers { get; set; }
         }
+
+        private async Task<bool> GuardarTransaccionEnDB(string base64, string hash)
+        {
+            try
+            {
+                Transaccion transaccion = new Transaccion() 
+                { 
+                    Base64 = base64,
+                    Hash = hash 
+                };
+
+                _context.Transaccions.Add(transaccion);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                return false; 
+            }
+
+            return true;
+        }
+
+        private async Task<Transaccion?> ObtenerTransaccionEnDB(string hash)
+        {
+            try
+            {
+                return await _context.Transaccions.FirstOrDefaultAsync(x => x.Hash == hash);
+            }
+            catch (Exception)
+            {
+            }
+
+            return null;
+        }
     }
 
     public class StandardTokenDeployment : ContractDeploymentMessage
@@ -425,5 +475,6 @@ namespace DocucenterBFA.Controllers
     public class HashInput
     {
         public string Hash { get; set; }
+        public string Base64 { get; set; }
     }
 }
