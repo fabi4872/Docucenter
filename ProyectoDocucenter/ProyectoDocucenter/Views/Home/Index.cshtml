@@ -367,7 +367,7 @@
                                     modalBodyContent.innerHTML = `
                                         <div class="mt-3 mb-3 d-flex flex-column" id="vistaTransaccion">
                                             <span class="mb-1"><strong>Hash:</strong> ${hashValue}</span>
-                                            <span class="mt-1"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
+                                            <span class="mb-1"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
                                             <span class="mb-1"><strong>Bloque:</strong> ${numeroBloque}</span>
                                             <span class="mb-1"><strong>Tabla:</strong> ${nombreTabla}</span>
                                             <span class="mb-1"><strong>Id:</strong> ${idTabla}</span>
@@ -390,7 +390,7 @@
                                 alertDangerMensaje.innerHTML = `
                                         <div>
                                             <h5 class="mt-2 mb-2">El archivo se encuentra registrado en la BFA</h5>
-                                            <span class="mb-1 mx-2"><strong>Hash:</strong> ${hashValue}</span>
+                                            <span class="mb-1" style="margin-right: 8px;"><strong>Hash:</strong> ${hashValue}</span>
                                             <span class="mb-1 mx-2"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
                                             <span class="mb-1 mx-2"><strong>Bloque:</strong> ${numeroBloque}</span>
                                             <span class="mb-1 mx-2"><strong>Tabla:</strong> ${nombreTabla}</span>
@@ -430,6 +430,7 @@
         };
 
         const guardarHash = (hash, base64) => {
+            console.log("HASH", hash);
             modal.hide();
 
             // Mostrar el spinner al iniciar la solicitud
@@ -499,7 +500,7 @@
                             <tr>
                                 <td colspan="3" class="text-center">No hay resultados disponibles</td>
                             </tr>`;
-                        modalHistorico.show();  // Mostrar el modal aunque esté vacío
+                        //modalHistorico.show();  // Mostrar el modal aunque esté vacío
                     }
                 })
                 .catch(error => {
