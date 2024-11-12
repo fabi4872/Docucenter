@@ -157,6 +157,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         const alertDanger = document.getElementById('alertDanger');
@@ -347,7 +348,7 @@
                 .then(data => {
                     if (data.success) {
                         if (data.data) {
-                            const { hash: hashValue, fechaYHoraStamp, numeroBloque, base64, nombreTabla, idTabla } = data.data;  // Extraer datos de `data.data`
+                            const { hash: hashValue, fechaYHoraStamp, numeroBloque, base64, nombreTabla, idTabla, signer } = data.data;  // Extraer datos de `data.data`
 
                             if (origen === "grid") {
                                 modal.hide();
@@ -360,6 +361,7 @@
                                             <span class="mb-1"><strong>Bloque:</strong> ${numeroBloque}</span>
                                             <span class="mb-1"><strong>Tabla:</strong> ${nombreTabla}</span>
                                             <span class="mb-1"><strong>Id:</strong> ${idTabla}</span>
+                                            <span class="mb-1"><strong>Sellador:</strong> ${signer}</span>
                                             <iframe class="mt-4" src="data:application/pdf;base64,${base64}" style="width: 100%; height: 600px;" frameborder="0"></iframe>
                                         </div>`;
                                 }
@@ -371,6 +373,7 @@
                                             <span class="mb-1"><strong>Bloque:</strong> ${numeroBloque}</span>
                                             <span class="mb-1"><strong>Tabla:</strong> ${nombreTabla}</span>
                                             <span class="mb-1"><strong>Id:</strong> ${idTabla}</span>
+                                            <span class="mb-1"><strong>Sellador:</strong> ${signer}</span>
                                             <div class="alert alert-danger alert-dismissible fade show mt-4 mb-0 p-2 px-3" role="alert">
                                                 <i class="fa-solid fa-triangle-exclamation" style="margin-right: .5rem;"></i><span>Error al recuperar el archivo desde Base de Datos.</span>
                                             </div>
@@ -387,15 +390,18 @@
                             if (origen === "insert") {
                                 modal.hide();
 
-                                alertDangerMensaje.innerHTML = `
-                                        <div>
-                                            <h5 class="mt-2 mb-2">El archivo se encuentra registrado en la BFA</h5>
-                                            <span class="mb-1" style="margin-right: 8px;"><strong>Hash:</strong> ${hashValue}</span>
-                                            <span class="mb-1 mx-2"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
-                                            <span class="mb-1 mx-2"><strong>Bloque:</strong> ${numeroBloque}</span>
-                                            <span class="mb-1 mx-2"><strong>Tabla:</strong> ${nombreTabla}</span>
-                                            <span class="mb-1 mx-2"><strong>Id:</strong> ${idTabla}</span>
-                                        </div>`;
+                                alertDangerMensaje.innerHTML = `                                
+                                        <div class="d-flex flex-column justify-content-center align-items-center">
+                                            <h5 class="mb-2">El archivo se encuentra registrado en la BFA</h5>
+                                            <hr style="width: 100%; height: 1px; background-color: #ccc; margin: 8px 0;" />
+                                            <span class="mb-2 mx-2"><strong>Hash:</strong> ${hashValue}</span>
+                                            <span class="mb-2 mx-2"><strong>Fecha:</strong> ${fechaYHoraStamp}</span>
+                                            <span class="mb-2 mx-2"><strong>Bloque:</strong> ${numeroBloque}</span>
+                                            <span class="mb-2 mx-2"><strong>Tabla:</strong> ${nombreTabla}</span>
+                                            <span class="mb-2 mx-2"><strong>Id:</strong> ${idTabla}</span>
+                                            <span class="mb-2 mx-2"><strong>Sellador:</strong> ${signer}</span>
+                                        </div>
+                                        `;
                                 alertDanger.style.display = "block";
 
                                 // Desplazar hacia la parte superior de la pantalla
@@ -430,7 +436,6 @@
         };
 
         const guardarHash = (hash, base64) => {
-            console.log("HASH", hash);
             modal.hide();
 
             // Mostrar el spinner al iniciar la solicitud
@@ -446,7 +451,16 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        obtenerHashes();
+                        Swal.fire({
+                            title: "¡Operación exitosa!",
+                            text: "Archivo guardado satisfactoriamente!",
+                            icon: "success",
+                            confirmButtonText: "ACEPTAR"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                obtenerHashes();
+                            }
+                        });
                     } else {
                         alertDangerMensaje.innerHTML = "Error al almacenar el hash.";
                         alertDanger.style.display = "block";
